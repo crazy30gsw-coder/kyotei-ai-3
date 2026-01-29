@@ -1,0 +1,34 @@
+name: Update Product Data
+
+on:
+  schedule:
+    # 日本時間 午前3時（UTC 18時）に毎日実行
+    - cron: '0 18 * * *'
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: cd ai-saas-compare && npm ci
+
+      - name: Run price updater
+        run: node ai-saas-compare/scripts/update-prices.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+      - name: Run daily stats aggregation
+        run: node ai-saas-compare/scripts/aggregate-stats.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
